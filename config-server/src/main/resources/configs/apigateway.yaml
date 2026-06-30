@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: apigateway
+#  cloud:
+#    gateway:
+#      discovery:
+#        locator:
+#          enabled: true
+#          lower-case-service-id: true
+#      routes:
+#        - id: parkinglot
+#          uri: lb://parkinglot
+#          predicates:
+#            - Path=/parkinglot/**
+#        - id: parkingspot-service
+#          uri: lb://parkingspot-service
+#          predicates:
+#            - Path=/parkingspot/**
+#        - id: booking-service
+#          uri: lb://booking-service
+#          predicates:
+#            - Path=/booking/**
+#        - id: user-service
+#          uri: lb://user-service
+#          predicates:
+#            - Path=/user/**
+
+server:
+  port: 8080
