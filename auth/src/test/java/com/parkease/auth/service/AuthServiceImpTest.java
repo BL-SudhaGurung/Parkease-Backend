@@ -2,6 +2,7 @@ package com.parkease.auth.service;
 
 import com.parkease.auth.dto.AuthResponse;
 import com.parkease.auth.dto.UserRegistration;
+import com.parkease.auth.dto.UserRequest;
 import com.parkease.auth.dto.UserResponse;
 import com.parkease.auth.entity.User;
 import com.parkease.auth.enums.Role;
@@ -132,10 +133,10 @@ class AuthServiceImpTest {
         when(jwtUtil.generateToken("sudha")).thenReturn("access-token");
         when(jwtUtil.generateRefreshToken("sudha")).thenReturn("refresh-token");
 
-        AuthResponse response = authService.login("sudha", "password123");
+        AuthResponse response = authService.login(new UserRequest());
 
         assertThat(response.getAccessToken()).isEqualTo("access-token");
-        assertThat(response.getRefreashToken()).isEqualTo("refresh-token");
+        assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
     }
 
     @Test
@@ -143,7 +144,7 @@ class AuthServiceImpTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
-        assertThatThrownBy(() -> authService.login("sudha", "wrong-password"))
+        assertThatThrownBy(() -> authService.login(new UserRequest()))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Bad credentials");
 

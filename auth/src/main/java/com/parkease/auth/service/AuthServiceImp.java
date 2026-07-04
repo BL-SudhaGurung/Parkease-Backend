@@ -5,11 +5,13 @@ import com.parkease.auth.dto.UserRegistration;
 import com.parkease.auth.dto.UserRequest;
 import com.parkease.auth.dto.UserResponse;
 import com.parkease.auth.entity.User;
+import com.parkease.auth.enums.ErrorCode;
 import com.parkease.auth.exception.ApiException;
 import com.parkease.auth.repository.UserRepository;
 import com.parkease.auth.security.JwtUtil;
 import com.parkease.auth.util.ResponseStructure;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImp implements AuthService {
@@ -33,6 +36,7 @@ public class AuthServiceImp implements AuthService {
     private final JwtUtil jwtUtil;
     private final ModelMapper modelMapper;
 
+
     @Value("${jwt.secret}")
     private String secret;
 
@@ -41,39 +45,43 @@ public class AuthServiceImp implements AuthService {
 
     @Override
     public ResponseEntity<ResponseStructure<UserResponse>> register(UserRegistration request) {
+        if (userRepository.existsByEmail(request.getEmail()))
+            throw new ApiException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        if (userRepository.existsByUsername(request.getUsername()))
+            throw new ApiException(ErrorCode.USERNAME_ALREADY_EXISTS);
 
-
-        ResponseStructure<UserResponse> rs=new ResponseStructure<>();
+        ResponseStructure<UserResponse> rs = new ResponseStructure<>();
         User user = new User();
         user.setUsername(request.getUsername());
+        user.setPhone(request.getPhone());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
         user.setIsActive(true);
         User savedUser = userRepository.save(user);
-        UserResponse user1=modelMapper.map(savedUser,UserResponse.class);
-        rs.setMsg("User Registrered Successfully");
+        UserResponse user1 = modelMapper.map(savedUser, UserResponse.class);
+        rs.setMsg("User Registered Successfully");
         rs.setData(user1);
         rs.setStatus(HttpStatus.CREATED.value());
-        return new ResponseEntity<>(rs,HttpStatus.CREATED);
-
+        log.info("User Registered with Id: {}", savedUser.getUserId());
+        return new ResponseEntity<>(rs, HttpStatus.CREATED);
     }
 
     @Override
-    public AuthResponse login(String username, String password) {
-
-
-       Authentication authentication= authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username,password)
+    public AuthResponse login(UserRequest user) {
+        log.info("Login attempt for user: {}", user.getUsername());
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
         );
-
-        UserDetails userDetails =(UserDetails)authentication.getPrincipal();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        log.info("Login successful for user: {}", user.getUsername());
         return new AuthResponse(jwtUtil.generateToken(userDetails.getUsername()), jwtUtil.generateRefreshToken(userDetails.getUsername()));
     }
 
     @Override
     public void logout(String token) {
         tokenBlacklistService.blacklist(token);
+        log.info("Token blacklisted on logout");
     }
 
     @Override

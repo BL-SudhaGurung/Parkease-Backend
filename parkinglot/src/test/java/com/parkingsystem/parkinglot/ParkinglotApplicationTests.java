@@ -1,4 +1,4 @@
-package com.parkingsystem.parkinglot;
+package com.parkease.parkinglot;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

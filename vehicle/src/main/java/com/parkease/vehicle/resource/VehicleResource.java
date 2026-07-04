@@ -5,17 +5,19 @@ import com.parkease.vehicle.dto.VehicleResponse;
 import com.parkease.vehicle.service.VehicleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/vehicles")
+@RequestMapping("/api/v1/vehicles")
 @RequiredArgsConstructor
 public class VehicleResource {
 
 
     private final VehicleService vehicleService;
 
-    @PostMapping
+    @PreAuthorize("hasRole('DRIVER')")
+    @PostMapping("/add")
     public ResponseEntity<VehicleResponse> addVehicle(@RequestBody VehicleRequest request) {
         return ResponseEntity.ok(vehicleService.addVehicle(request));
     }

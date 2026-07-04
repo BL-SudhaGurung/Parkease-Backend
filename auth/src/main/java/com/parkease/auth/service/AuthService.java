@@ -12,7 +12,7 @@ public interface AuthService {
 
     ResponseEntity<ResponseStructure<UserResponse>> register(UserRegistration user);
 
-    AuthResponse login(String email, String password);
+    AuthResponse login(UserRequest user);
 
     void logout(String token);
 

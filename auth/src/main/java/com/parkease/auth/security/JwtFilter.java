@@ -5,6 +5,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -25,6 +27,14 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/login/oauth2/") ||
+               path.startsWith("/oauth2/") ||
+               path.startsWith("/api/v1/auth/");
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, jakarta.servlet.FilterChain filterChain) throws ServletException, IOException {
@@ -39,6 +49,7 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(token);
             } catch (ExpiredJwtException e) {
+                log.warn("Expired JWT token for request: {}", request.getRequestURI());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\":\"TOKEN_EXPIRED\",\"message\":\"Access token expired, please refresh\"}");
@@ -48,7 +59,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // reject blacklisted tokens
         if (token != null && tokenBlacklistService.isBlacklisted(token)) {
-            filterChain.doFilter(request, response);
+            log.warn("Blacklisted token used for request: {}", request.getRequestURI());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"TOKEN_BLACKLISTED\",\"message\":\"Token has been logged out\"}");
             return;
         }
 
@@ -57,18 +71,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
             UserDetails userDetails = customerUserDetails.loadUserByUsername(username);
 
-            if (jwtUtil.validateToken(token, username)) {  // validate after extract
-
+            if (jwtUtil.validateToken(token, username)) {
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
+                                userDetails, null, userDetails.getAuthorities()
                         );
-
-
-
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                log.debug("Authenticated user: {}", username);
             }
         }
 
