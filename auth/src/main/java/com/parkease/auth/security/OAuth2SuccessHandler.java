@@ -38,7 +38,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             return userRepository.save(newUser);
         });
 
-        String accessToken = jwtUtil.generateToken(user.getUsername());
+        String accessToken = jwtUtil.generateToken(user.getUsername(), String.valueOf(user.getRole()));
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
         log.info("OAuth2 login successful for email: {}", email);

@@ -22,6 +22,11 @@ public class AuthResource {
         this.authService = authService;
     }
 
+    @GetMapping("/user/{username}")
+    public ResponseEntity<UserResponse> getUserByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(authService.getUserResponseByUsername(username));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody UserRequest request) {
         log.info("Login request received for user: {}", request.getUsername());

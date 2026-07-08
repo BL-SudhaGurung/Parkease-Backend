@@ -40,16 +40,20 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, jakarta.servlet.FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
 
+        log.info("Processing JWT filter for request: {} with header: {}", request.getRequestURI(), authHeader);
+
         String token = null;
         String username = null;
 
         // extract token from header
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
+            log.info("Extracted token from request: {}", request.getRequestURI());
+            log.info("Extracted token: {}", token.substring(0,7));
             try {
                 username = jwtUtil.extractUsername(token);
             } catch (ExpiredJwtException e) {
-                log.warn("Expired JWT token for request: {}", request.getRequestURI());
+                log.error("Expired JWT token for request: {}", request.getRequestURI());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\":\"TOKEN_EXPIRED\",\"message\":\"Access token expired, please refresh\"}");
@@ -77,7 +81,7 @@ public class JwtFilter extends OncePerRequestFilter {
                                 userDetails, null, userDetails.getAuthorities()
                         );
                 SecurityContextHolder.getContext().setAuthentication(auth);
-                log.debug("Authenticated user: {}", username);
+                log.info("Authenticated user: {} and role : {}", username,auth.getAuthorities());
             }
         }
 

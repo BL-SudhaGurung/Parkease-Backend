@@ -2,7 +2,6 @@ package com.parkease.auth.exception;
 
 import com.parkease.auth.enums.ErrorCode;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Getter
 public class ApiException extends RuntimeException {

@@ -74,8 +74,14 @@ public class AuthServiceImp implements AuthService {
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
         );
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        log.info("Login successful for user: {}", user.getUsername());
-        return new AuthResponse(jwtUtil.generateToken(userDetails.getUsername()), jwtUtil.generateRefreshToken(userDetails.getUsername()));
+        String role = userDetails.getAuthorities().stream()
+                .findFirst()
+                .map(a -> a.getAuthority().replace("ROLE_", ""))
+                .orElse("");
+        log.info("User authenticated successfully: {}", authentication.getAuthorities());
+        log.info("Login successful for user: {} with role: {}", user.getUsername(), role);
+        log.info("authorities {}", authentication.getAuthorities().toString());
+        return new AuthResponse(jwtUtil.generateToken(userDetails.getUsername(), role), jwtUtil.generateRefreshToken(userDetails.getUsername()));
     }
 
     @Override
@@ -94,61 +100,66 @@ public class AuthServiceImp implements AuthService {
 
 
     @Override
-    public User getUserByEmail(String email) {
+    public UserResponse getUserResponseByUsername(String username) {
+        log.info("Fetching user by username: {}", username);
+        User user = userRepository.findByUsername(username);
+        if(user == null) throw new ApiException(ErrorCode.USER_NOT_FOUND, "User not found with username: " + username);
+        return modelMapper.map(user, UserResponse.class);
+    }
 
+    @Override
+    public User getUserByEmail(String email) {
+        log.debug("Fetching user by email: {}", email);
         return userRepository.findByEmail(email)
-                .orElseThrow();
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND, "User not found with email: " + email));
     }
 
     @Override
     public String refreshToken(String refreshToken) {
+        log.info("Refresh token request received");
         String username = jwtUtil.extractUsername(refreshToken);
-        if (username == null || !jwtUtil.validateToken(refreshToken, username))
+        String role = jwtUtil.extractRole(refreshToken);
+        if (username == null || !jwtUtil.validateToken(refreshToken, username)) {
+            log.warn("Invalid refresh token for username: {}", username);
             throw new RuntimeException("Invalid refresh token");
-//        return new AuthResponse(
-//                jwtUtil.generateToken(username),
-//                jwtUtil.generateRefreshToken(username)
-//        );
-        return jwtUtil.generateToken(username);
+        }
+        log.info("Refresh token validated for user: {}", username);
+        return jwtUtil.generateToken(username, role);
     }
     @Override
     public User getUserById(Integer userId) {
-
+        log.debug("Fetching user by id: {}", userId);
         return userRepository.findById(userId)
-                .orElseThrow();
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND, "User not found with id: " + userId));
     }
 
     @Override
     public User updateProfile(Integer userId, User user) {
-
+        log.info("Updating profile for userId: {}", userId);
         User existingUser = getUserById(userId);
-
         existingUser.setUsername(user.getUsername());
         existingUser.setPhone(user.getPhone());
         existingUser.setProfilePicUrl(user.getProfilePicUrl());
-
-        return userRepository.save(existingUser);
+        User updated = userRepository.save(existingUser);
+        log.info("Profile updated for userId: {}", userId);
+        return updated;
     }
 
     @Override
-    public void changePassword(Integer userId,
-                               String password) {
-
+    public void changePassword(Integer userId, String password) {
+        log.info("Changing password for userId: {}", userId);
         User user = getUserById(userId);
-
-        user.setPassword(
-                passwordEncoder.encode(password));
-
+        user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
+        log.info("Password changed for userId: {}", userId);
     }
 
     @Override
     public void deactivateAccount(Integer userId) {
-
+        log.info("Deactivating account for userId: {}", userId);
         User user = getUserById(userId);
-
         user.setIsActive(false);
-
         userRepository.save(user);
+        log.info("Account deactivated for userId: {}", userId);
     }
 }

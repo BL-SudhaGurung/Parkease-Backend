@@ -22,6 +22,8 @@ public interface AuthService {
 
     User getUserByEmail(String email);
 
+    UserResponse getUserResponseByUsername(String username);
+
     User getUserById(Integer userId);
 
     User updateProfile(Integer userId,User user);

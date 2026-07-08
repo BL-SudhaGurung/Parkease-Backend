@@ -36,13 +36,24 @@ public class JwtUtil {
                 .getSubject();
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String username, String role) {
+        log.debug("Generating token for user: {} with role: {}", username, role);
         return Jwts.builder()
                 .subject(username)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    public String extractRole(String token) {
+        return (String) Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("role");
     }
 
     public String generateRefreshToken(String username) {
@@ -56,11 +67,12 @@ public class JwtUtil {
 
     public boolean validateToken(String token, String username) {
         try {
-            Jwts.parser()
+            Claims claims = Jwts.parser()
                     .verifyWith(getSigningKey())
                     .build()
-                    .parseSignedClaims(token);
-            return true;
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return claims.getSubject().equals(username);
         } catch (ExpiredJwtException e) {
             log.warn("Token expired: {}", e.getMessage());
             return false;
