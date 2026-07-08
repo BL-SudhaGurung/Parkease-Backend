@@ -1,5 +1,7 @@
 package com.parkease.vehicle.service;
 
+import com.parkease.vehicle.client.AuthClient;
+import com.parkease.vehicle.dto.UserResponse;
 import com.parkease.vehicle.dto.VehicleRequest;
 import com.parkease.vehicle.dto.VehicleResponse;
 import com.parkease.vehicle.entity.Vehicle;
@@ -8,21 +10,35 @@ import com.parkease.vehicle.enums.ErrorCode;
 import com.parkease.vehicle.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class VehicleServiceImp implements VehicleService {
 
     private final VehicleRepository vehicleRepository;
     private final ModelMapper modelMapper;
+    private final AuthClient authClient;
+
+    public VehicleServiceImp(VehicleRepository vehicleRepository, ModelMapper modelMapper, AuthClient authClient) {
+        this.vehicleRepository = vehicleRepository;
+        this.modelMapper = modelMapper;
+        this.authClient = authClient;
+    }
 
     @Override
     public VehicleResponse addVehicle(VehicleRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        System.out.println("Adding vehicle for user:"+ username);
+        Integer ownerId = authClient.getUserByUsername(username).getUserId();
+        System.out.println(ownerId+"owner id");
+
         Vehicle vehicle = modelMapper.map(request, Vehicle.class);
         vehicle.setIsActive(true);
+        vehicle.setOwnerId(ownerId);
         return modelMapper.map(vehicleRepository.save(vehicle), VehicleResponse.class);
     }
 
@@ -51,7 +67,9 @@ public class VehicleServiceImp implements VehicleService {
 
     @Override
     public void deleteVehicle(Integer vehicleId) {
-        vehicleRepository.deleteByVehicleId(vehicleId);
+        if (!vehicleRepository.existsById(vehicleId))
+            throw new ApiException(ErrorCode.VEHICLE_NOT_FOUND, "Vehicle not found with id: " + vehicleId);
+        vehicleRepository.deleteById(vehicleId);
     }
 
     @Override
