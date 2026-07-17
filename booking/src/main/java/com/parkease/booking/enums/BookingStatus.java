@@ -1,4 +1,4 @@
-package com.parkease.booking.entity;
+package com.parkease.booking.enums;
 
 public enum BookingStatus {
     RESERVED,

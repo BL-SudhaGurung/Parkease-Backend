@@ -1,18 +1,15 @@
-package com.parkease.booking.entity;
+package com.parkease.booking.dto;
 
 import com.parkease.booking.enums.BookingStatus;
 import com.parkease.booking.enums.BookingType;
-import jakarta.persistence.*;
 import lombok.Data;
+import org.springframework.data.annotation.CreatedBy;
 
 import java.time.LocalDateTime;
 
-@Entity
 @Data
-public class Booking {
+public class BookingResponse {
 
-    @Id
-    @GeneratedValue(strategy =GenerationType.IDENTITY)
     private Long bookingId;
 
     private Long userId;
@@ -25,17 +22,16 @@ public class Booking {
 
     private String vehicleType;
 
-    @Enumerated(EnumType.STRING)
     private BookingType bookingType;
 
     private LocalDateTime startTime;
 
     private LocalDateTime endTime;
 
-    @Enumerated(EnumType.STRING)
     private BookingStatus status;
 
     private Double totalAmount;
 
+    @CreatedBy
     private LocalDateTime createdAt;
 }

@@ -1,5 +1,7 @@
 package com.parkease.booking.service;
 
+import com.parkease.booking.dto.BookingRequest;
+import com.parkease.booking.dto.BookingResponse;
 import com.parkease.booking.entity.Booking;
 
 import java.time.LocalDateTime;
@@ -7,26 +9,26 @@ import java.util.List;
 
 public interface BookingService {
 
-    Booking createBooking(
-            Booking booking);
+    BookingResponse createBooking(
+            BookingRequest booking);
 
-    Booking getBookingById(Long bookingId);
+    BookingResponse getBookingById(Long bookingId);
 
-    List<Booking> getBookingsByUser(
+    List<BookingResponse> getBookingsByUser(
             Long userId);
 
-    List<Booking> getBookingsByLot(
+    List<BookingResponse> getBookingsByLot(
             Long lotId);
 
-    List<Booking> getActiveBookings();
+    List<BookingResponse> getActiveBookings();
 
     void cancelBooking(Long bookingId);
 
-    Booking checkIn(Long bookingId);
+    BookingResponse checkIn(Long bookingId);
 
-    Booking checkOut(Long bookingId);
+    BookingResponse checkOut(Long bookingId);
 
-    Booking extendBooking(
+    BookingResponse extendBooking(
             Long bookingId,
             LocalDateTime endTime);
 
