@@ -1,5 +1,7 @@
 package com.parkease.parkingspot.service;
 
+import com.parkease.parkingspot.dto.ParkingSpotRequest;
+import com.parkease.parkingspot.dto.ParkingSpotResponse;
 import com.parkease.parkingspot.entity.ParkingSpot;
 
 import java.util.List;
@@ -7,22 +9,22 @@ import java.util.List;
 
 public interface SpotService {
 
-    ParkingSpot addSpot(ParkingSpot spot);
+    ParkingSpotResponse addSpot(ParkingSpotRequest spot);
 
-    List<ParkingSpot> addBulkSpots(
-            List<ParkingSpot> spots);
+    List<ParkingSpotResponse> addBulkSpots(
+            List<ParkingSpotRequest> spots);
 
-    ParkingSpot getSpotById(Long spotId);
+    ParkingSpotResponse getSpotById(Long spotId);
 
-    List<ParkingSpot> getSpotsByLot(Long lotId);
+    List<ParkingSpotResponse> getSpotsByLot(Long lotId);
 
-    List<ParkingSpot> getAvailableSpots(Long lotId);
+    List<ParkingSpotResponse> getAvailableSpots(Long lotId);
 
     void occupySpot(Long spotId);
 
     void releaseSpot(Long spotId);
 
-    ParkingSpot updateSpot(Long spotId,
+    ParkingSpotRequest updateSpot(Long spotId,
                            ParkingSpot spot);
 
     void deleteSpot(Long spotId);

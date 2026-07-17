@@ -8,6 +8,7 @@ import com.parkease.auth.util.ResponseStructure;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -40,6 +41,7 @@ public class AuthResource {
     }
 
     @PostMapping("/logout")
+    @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
         authService.logout(authHeader.substring(7));
         log.info("Logout successful");
@@ -57,4 +59,45 @@ public class AuthResource {
                                            @RequestParam String refreshToken) {
         return ResponseEntity.ok(new com.parkease.auth.dto.AuthResponse(accessToken, refreshToken));
     }
+
+
+//    @PostMapping("/forgot-password")
+//
+//    @PostMapping("/reset-password")
+//
+//    @PostMapping("/verify-email")
+//
+//    @PostMapping("/resend-verification")
+//
+//
+//    @GetMapping("/profile")
+//    @PreAuthorize("hasAnyRole('DRIVER','ADMIN')")
+//
+//    @PutMapping("/profile")
+//    @PreAuthorize("hasAnyRole('DRIVER','ADMIN')")
+//
+//    @PutMapping("/change-password")
+//    @PreAuthorize("hasAnyRole('DRIVER','ADMIN')")
+//
+//    @DeleteMapping("/deactivate")
+//
+//
+//    @GetMapping("/users")
+//
+//    @GetMapping("/users/{userId}")
+//
+//    @GetMapping("/users/email/{email}")
+//
+//    @GetMapping("/users/username/{username}")
+//
+//    @PutMapping("/users/{userId}/role")
+//
+//    @PutMapping("/users/{userId}/status")
+//
+//    @DeleteMapping("/users/{userId}")
+//
+//
+
+
+
 }
